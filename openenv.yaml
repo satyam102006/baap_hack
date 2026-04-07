@@ -1,0 +1,11 @@
+name: tax-aware-portfolio-rebalancer
+version: 1.0.0
+description: A real-world wealth management environment testing an agent's ability to minimize capital gains taxes and avoid wash sales while rebalancing a portfolio.
+author: "Quant Researcher (DSEU)"
+entry_point: environment:TaxAwareRebalancerEnv
+tags:
+  - finance
+  - reasoning
+  - optimization
+  - constraint-satisfaction
+  

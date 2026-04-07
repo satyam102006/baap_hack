@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tax-aware-portfolio-rebalancer"
+version = "1.0.0"
+description = "Tax-Aware Portfolio Rebalancer OpenEnv"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "openenv-core",
+    "pydantic",
+    "openai",
+    "numpy",
+    "fastapi",
+    "uvicorn"
+]
+[project.scripts]
+server = "server.app:main"
