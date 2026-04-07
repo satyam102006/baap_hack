@@ -1,9 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Dict, List
 
-# ---------------------------------------------------------
 # 1. Sub-Models (The Building Blocks)
-# ---------------------------------------------------------
+
 
 class TaxLot(BaseModel):
     lot_id: str = Field(description="Unique identifier for this specific tax lot.")
@@ -18,9 +17,9 @@ class SellOrder(BaseModel):
     quantity: int = Field(description="Number of shares to sell.")
     lot_id: str = Field(description="The specific tax lot ID to sell from. Crucial for tax-loss harvesting.")
 
-# ---------------------------------------------------------
+
 # 2. The Observation Space (What the Agent Sees)
-# ---------------------------------------------------------
+
 
 class Observation(BaseModel):
     step_number: int = Field(description="Current step in the environment.")
@@ -30,9 +29,9 @@ class Observation(BaseModel):
     tax_lots: List[TaxLot] = Field(description="List of all currently held tax lots.")
     restricted_wash_sale_list: List[str] = Field(description="Tickers the agent is legally prohibited from buying this step due to recent loss-harvesting.")
 
-# ---------------------------------------------------------
+
 # 3. The Action Space (What the Agent Does)
-# ---------------------------------------------------------
+
 
 class Action(BaseModel):
     reasoning: str = Field(
