@@ -1,18 +1,31 @@
 from pydantic import BaseModel, Field
 from typing import Dict, List
 
+<<<<<<< Updated upstream
 # 1. Sub-Models (The Building Blocks)
 
+=======
+<<<<<<< HEAD
+=======
+# 1. Sub-Models (The Building Blocks)
+>>>>>>> Stashed changes
 
+
+>>>>>>> f968a3c741c44aa848c8fa18fbea7ad1a88bab00
 class TaxLot(BaseModel):
-    lot_id: str = Field(description="Unique identifier for this specific tax lot.")
-    ticker: str = Field(description="The asset ticker (e.g., 'AAPL', 'VOO').")
-    quantity: int = Field(description="Number of shares in this specific lot.")
-    purchase_price: float = Field(description="The price the shares were originally bought at (Cost Basis).")
-    current_price: float = Field(description="The current market price of the asset.")
-    is_long_term: bool = Field(description="True if held for >1 year (lower tax rate), False if short-term.")
+    lot_id: str
+    ticker: str
+    quantity: int
+    purchase_price: float
+    current_price: float
+    is_long_term: bool
 
 class SellOrder(BaseModel):
+<<<<<<< HEAD
+    ticker: str
+    quantity: int
+    lot_id: str
+=======
     ticker: str = Field(description="The asset ticker to sell.")
     quantity: int = Field(description="Number of shares to sell.")
     lot_id: str = Field(description="The specific tax lot ID to sell from. Crucial for tax-loss harvesting.")
@@ -32,6 +45,10 @@ class Observation(BaseModel):
 
 # 3. The Action Space (What the Agent Does)
 
+<<<<<<< Updated upstream
+=======
+>>>>>>> f968a3c741c44aa848c8fa18fbea7ad1a88bab00
+>>>>>>> Stashed changes
 
 class Action(BaseModel):
     reasoning: str = Field(
@@ -48,3 +65,15 @@ class Action(BaseModel):
     submit_portfolio: bool = Field(
         description="Set to True if the portfolio is perfectly rebalanced and the episode should end."
     )
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+
+class Observation(BaseModel):
+    cash: float
+    tax_lots: List[TaxLot]
+    target_alloc: Dict[str, float]
+    restricted_wash_sale_list: List[str]
+=======
+>>>>>>> f968a3c741c44aa848c8fa18fbea7ad1a88bab00
+>>>>>>> Stashed changes
