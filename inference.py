@@ -67,9 +67,6 @@ def run_inference():
 
             step_num += 1
 
-        # MANDATORY LOG: [END]
-        # The prompt specifies reward must be 0.0 - 1.0.
-        # (Assuming reward in environment is already scaled, or you can print the final reward here)
         final_reward = max(0.0, float(reward))
         print(f"[END] task_id={task} reward={final_reward:.4f}")
 
