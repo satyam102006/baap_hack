@@ -15,4 +15,4 @@ USER user
 EXPOSE 7860
 
 # Start the OpenEnv server on the correct port
-CMD ["openenv", "serve", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["openenv", "app:app", "--host", "0.0.0.0", "--port", "7860"]
