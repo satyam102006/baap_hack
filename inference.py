@@ -72,7 +72,7 @@ def run_inference():
 
             step_num += 1
 
-        final_reward = max(0.0, float(reward))
+        final_reward = max(0.001, min(0.999, float(reward)))
         print(f"[END] task_id={task} reward={final_reward:.4f}")
 
 if __name__ == "__main__":

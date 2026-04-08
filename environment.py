@@ -54,7 +54,7 @@ class TaxAwareRebalancerEnv:
     def step(self, action: Action):
         self.step_count += 1
         errors = []
-        reward = 0.0
+        reward = 0.001
         done = False
 
         # 1. Process Sells & Taxes
@@ -114,7 +114,10 @@ class TaxAwareRebalancerEnv:
             tax_penalty = min(0.5, self.total_tax_paid / 5000.0)
             error_penalty = 0.5 if errors else 0.0
 
-            reward = max(0.0, base_reward - tax_penalty - error_penalty)
+            raw_reward = base_reward - tax_penalty - error_penalty
+
+            # STRICT BOUNDS FIX: Force score to be strictly between (0, 1)
+            reward = max(0.001, min(0.999, raw_reward))
 
         info = {"errors": errors, "total_tax_paid": round(self.total_tax_paid, 2)}
         return self._get_observation(), reward, done, info
