@@ -1,8 +1,9 @@
 import os
 import json
+import yaml
 from openai import OpenAI
-from environment import TaxAwareRebalancerEnv
 from models import Action
+from environment import TaxAwareRebalancerEnv
 
 def run_inference():
     # 1. Environment Variables Check
@@ -13,14 +14,22 @@ def run_inference():
     if not api_key:
         print("Warning: HF_TOKEN environment variable not set. Using dummy key.")
 
-    # 2. Strict OpenAI Client Usage (Required by Hackathon)
+    # 2. Strict OpenAI Client Usage
     client = OpenAI(
         base_url=base_url,
         api_key=api_key or "dummy_key"
     )
 
     env = TaxAwareRebalancerEnv()
-    tasks = ["easy", "medium", "hard"]
+
+    # --- DYNAMIC TASK PARSER ---
+    try:
+        with open("openenv.yaml", "r") as f:
+            config = yaml.safe_load(f)
+            tasks = [t["id"] for t in config.get("tasks", [{"id": "easy"}, {"id": "medium"}, {"id": "hard"}])]
+    except Exception as e:
+        print(f"Warning: Could not read openenv.yaml, using defaults. Error: {e}")
+        tasks = ["easy", "medium", "hard"]
 
     for task in tasks:
         print(f"[START] task_id={task}")
@@ -60,7 +69,6 @@ def run_inference():
                 obs, reward, done, info = env.step(Action(**action_dict))
 
             except Exception as e:
-                # Safe Fallback to prevent complete crash on LLM hallucination
                 fallback_action = {
                     "reasoning": "LLM failed to output valid JSON. Triggering automatic fallback.",
                     "buys": {},
@@ -72,6 +80,7 @@ def run_inference():
 
             step_num += 1
 
+        # STRICT BOUNDS FIX
         final_reward = max(0.001, min(0.999, float(reward)))
         print(f"[END] task_id={task} reward={final_reward:.4f}")
 

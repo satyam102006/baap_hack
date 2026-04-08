@@ -27,7 +27,6 @@ class TaxAwareRebalancerEnv:
         self.restricted_list = []
         self.target_alloc = {"VOO": 0.60, "BND": 0.40}
 
-        # FIXED STATE for standardized benchmarking
         if task_level in ["easy", "medium"]:
             self.cash = 10000.0
             self.tax_lots = [
@@ -35,7 +34,6 @@ class TaxAwareRebalancerEnv:
                 TaxLot(lot_id="e5f6g7h8", ticker="BND", quantity=200, purchase_price=85.0, current_price=78.0, is_long_term=False),
                 TaxLot(lot_id="i9j0k1l2", ticker="VOO", quantity=50, purchase_price=480.0, current_price=450.0, is_long_term=False)
             ]
-        # STOCHASTIC STATE to prove AI generalization
         else:
             self.cash = round(random.uniform(5000.0, 15000.0), 2)
             num_lots = random.randint(4, 8)
@@ -54,10 +52,8 @@ class TaxAwareRebalancerEnv:
     def step(self, action: Action):
         self.step_count += 1
         errors = []
-        reward = 0.001
         done = False
 
-        # 1. Process Sells & Taxes
         for sell in action.sells:
             lot = next((l for l in self.tax_lots if l.lot_id == sell.lot_id), None)
             if not lot or lot.quantity < sell.quantity:
@@ -72,14 +68,12 @@ class TaxAwareRebalancerEnv:
                 tax_rate = 0.15 if lot.is_long_term else 0.25
                 self.total_tax_paid += gain * tax_rate
             elif gain < 0 and self.task_level == "hard":
-                # Wash Sale Trap
                 if lot.ticker not in self.restricted_list:
                     self.restricted_list.append(lot.ticker)
 
             self.cash += proceeds
             lot.quantity -= sell.quantity
 
-        # 2. Process Buys
         for ticker, qty in action.buys.items():
             if self.task_level == "hard" and ticker in self.restricted_list:
                 errors.append(f"Wash sale violation: {ticker} is restricted for 30 days.")
@@ -94,30 +88,29 @@ class TaxAwareRebalancerEnv:
             self.cash -= cost
             self.tax_lots.append(TaxLot(lot_id=str(uuid.uuid4())[:8], ticker=ticker, quantity=qty, purchase_price=price, current_price=price, is_long_term=False))
 
-        # Cleanup empty lots
         self.tax_lots = [l for l in self.tax_lots if l.quantity > 0]
 
-        # 3. Terminate & Calculate Reward
+        total_value = self.cash + sum(l.quantity * l.current_price for l in self.tax_lots)
+        allocations = {"VOO": 0.0, "BND": 0.0}
+        if total_value > 0:
+            for l in self.tax_lots:
+                allocations[l.ticker] += (l.quantity * l.current_price) / total_value
+
+        l1_error = sum(abs(self.target_alloc[t] - allocations.get(t, 0.0)) for t in self.target_alloc)
+
+        raw_score = (1.0 - l1_error) - min(0.5, self.total_tax_paid / 5000.0) - (0.5 if errors else 0.0)
+        current_score = max(0.001, min(0.999, raw_score))
+
         if action.submit_portfolio or self.step_count >= 10 or errors:
             done = True
+            reward = current_score
+        else:
+            reward = 0.0
 
-            total_value = self.cash + sum(l.quantity * l.current_price for l in self.tax_lots)
-            allocations = {"VOO": 0.0, "BND": 0.0}
-            if total_value > 0:
-                for l in self.tax_lots:
-                    allocations[l.ticker] += (l.quantity * l.current_price) / total_value
+        info = {
+            "errors": errors,
+            "total_tax_paid": round(self.total_tax_paid, 2),
+            "score": current_score
+        }
 
-            l1_error = sum(abs(self.target_alloc[t] - allocations.get(t, 0.0)) for t in self.target_alloc)
-
-            # Reward Math: Max 1.0. Deduct for allocation drift, tax penalties, and rule breaks.
-            base_reward = max(0.0, 1.0 - l1_error)
-            tax_penalty = min(0.5, self.total_tax_paid / 5000.0)
-            error_penalty = 0.5 if errors else 0.0
-
-            raw_reward = base_reward - tax_penalty - error_penalty
-
-            # STRICT BOUNDS FIX: Force score to be strictly between (0, 1)
-            reward = max(0.001, min(0.999, raw_reward))
-
-        info = {"errors": errors, "total_tax_paid": round(self.total_tax_paid, 2)}
-        return self._get_observation(), reward, done, info
+        return self._get_observation(), float(reward), done, info
