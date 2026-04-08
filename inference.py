@@ -80,9 +80,8 @@ def run_inference():
 
             step_num += 1
 
-        # STRICT BOUNDS FIX
         final_reward = max(0.001, min(0.999, float(reward)))
-        print(f"[END] task_id={task} reward={final_reward:.4f}")
+        print(f"[END] task_id={task} score={final_reward:.4f}")
 
 if __name__ == "__main__":
     run_inference()

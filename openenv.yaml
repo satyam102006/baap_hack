@@ -8,4 +8,7 @@ tags:
   - reasoning
   - optimization
   - constraint-satisfaction
-  
+tasks:
+  - id: easy
+  - id: medium
+  - id: hard
